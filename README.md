@@ -1,19 +1,25 @@
 ofxMIOFlowGLSL
 ==============
 
-Optical Flow GPU Version - based upon Andrew Benson's solution
+Optical Flow GPU Version - based upon Andrew Benson's solution.
 This is a simple GLSL based solution for calculating optical flow. The main benefit is to calculate the flow on GPU and then 
 keep the results within a raw texture to forward it for further Shader based processing.
 
 Advantages
 ======================
-Hence it is possible to define Ping pong shaders with particles or complex objects in Geometry shader who are feeded by the flow texture.
-Another advantage of this GPU solution is its speed. Hence it is appropriate for detecting flow in Full HD images or on top of depth data.
+It is possible to define Ping pong shaders with particles or complex objects in Geometry shader who are feeded by the flow texture.
+Another advantage of this GPU solution is its speed. It is appropriate for detecting flow in Full HD images or on top of depth data.
 
 
 Installation
 ======================
-just copy the content of the zip file in your OF addon path. Link it in your project and you are ready to go.
+- copy the content of the zip file in your OF addon path. 
+- link it in your project in additional header files.
+- include the header
+  
+   #include "ofxMIOFlowGLSL.h"
+
+and you are ready to go.
 
 
 HOW TO
@@ -26,7 +32,9 @@ try the example file you will see that everything is pretty straight forward and
 
 3) getFlowBlurTexture() - to access the texture of your optical flow
 
-you can also simply preview your results by the use of drawReposition(0,0);
+you can also simply preview your results by the use of drawReposition(0,0); 
+Please refer to the example_Basic provided. There is anything you need plus the ability to see how adjustments lead
+to different results
 
 
 HOW TO USE IN SHADER
@@ -52,6 +60,9 @@ have alternative ideas - please let me know!
 
 
 
-
-
 ENJOY
+
+prince mio
+New Media Dance
+
+princemio.net
