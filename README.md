@@ -17,7 +17,7 @@ Installation
 - link it in your project in additional header files.
 - include the header
   
-   {#include "ofxMIOFlowGLSL.h"}
+  include "ofxMIOFlowGLSL.h"
 
 and you are ready to go.
 
@@ -45,7 +45,7 @@ shader then youll have to lookup the flow offset coordinates in 2d space just li
 	vec2 get2DOff(sampler2DRect tex ,vec2 coord) {
 		vec4 col = texture2DRect(tex, coord);
 		if (col.w >0.95)  col.z=col.z*-1;
-		return vec2(-1*(col.y-col.x),col.z);//,1,1);
+		return vec2(-1*(col.y-col.x),col.z);
 	}
 
 the return 2 dimensional vector is your offset in 2d Space...play with it...
