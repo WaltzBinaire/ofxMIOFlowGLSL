@@ -17,7 +17,7 @@ Installation
 - link it in your project in additional header files.
 - include the header
   
-   #include "ofxMIOFlowGLSL.h"
+   {#include "ofxMIOFlowGLSL.h"}
 
 and you are ready to go.
 
