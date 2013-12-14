@@ -42,13 +42,12 @@ string FlowShader::getFlowShader(){
 	uniform vec2 scale;  
 	uniform vec2 offset;  
 	uniform float lambda;   
-	varying vec2 texCoord;  
-
+	varying vec2 texCoord;
 
 	vec4 getColorCoded(float x, float y,vec2 scale) {
 		vec2 xout = vec2(max(x,0.),abs(min(x,0.)))*scale.x;
 		vec2 yout = vec2(max(y,0.),abs(min(y,0.)))*scale.y;
-		float dirY = 1;
+        float dirY = 1.0;
 		if (yout.x > yout.y)  dirY=0.90;
 		return vec4(xout.xy,max(yout.x,yout.y),dirY);
 	}
@@ -105,8 +104,8 @@ string FlowShader::getReposShader(){
 
 	vec2 get2DOff(sampler2DRect tex ,vec2 coord) {
 		vec4 col = texture2DRect(tex, coord);
-		if (col.w >0.95)  col.z=col.z*-1;
-		return vec2(-1*(col.y-col.x),col.z);//,1,1);
+		if (col.w >0.95)  col.z=col.z*-1.0;
+		return vec2(-1.0*(col.y-col.x),col.z);//,1,1);
 	}
 
 	void main()  
@@ -135,27 +134,28 @@ string FlowShader::getBlurShader(){
 	// A good value for 5x5 is around 2 to 3.5
 	// ... play around with this based on what you need :)
 
+
 	const float pi = 3.14159265;
 
 	vec4 get2DOff(sampler2DRect tex ,vec2 coord) {
 		vec4 col = texture2DRect(tex, coord);
-		if (col.w >0.95)  col.z=col.z*-1;
-		return vec4(col.y-col.x,col.z,1,1);
+		if (col.w >0.95)  col.z=col.z*-1.0;
+		return vec4(col.y-col.x,col.z,1.0,1.0);
 	}
 
 
 	vec4 getColorCoded(float x, float y,vec2 scale) {
 		vec2 xout = vec2(max(x,0.),abs(min(x,0.)))*scale.x;
 		vec2 yout = vec2(max(y,0.),abs(min(y,0.)))*scale.y;
-		float dirY = 1;
+        float dirY = 1.0;
 		if (yout.x > yout.y)  dirY=0.90;
 		return vec4(xout.yx,max(yout.x,yout.y),dirY);
 	}
 
 	void main() {  
-		float numBlurPixelsPerSide = float(blurSize / 2); 
+		float numBlurPixelsPerSide = float(blurSize / 2.0);
 
-		vec2 blurMultiplyVec = 0 < horizontalPass ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+		vec2 blurMultiplyVec = 0.0 < horizontalPass ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
 
 		// Incremental Gaussian Coefficent Calculation (See GPU Gems 3 pp. 877 - 889)
 		vec3 incrementalGaussian;
