@@ -3,31 +3,45 @@
 #include "ofMain.h"
 #include "FlowShader.h"
 
+class ofxMioFlowGLSL  
+{
+	public:
 
-class ofxMioFlowGLSL  {
-public:
-	void setup(int wI,int hI);
+		ofxMioFlowGLSL();
 
-	void update(ofTexture cur);
-	void update(ofTexture cur, float lambdaI,float blurAmountI, float displaceAmountI );
+		void setup(int wI,int hI);
 
-	void drawFlowGrid(int x,int y);
-	void drawFlowGridRaw(int x,int y);
-	void drawReposition(int x,int y);
+		void update(ofTexture& cur, bool _runReposition);
 
-	ofTexture getFlowBlurTexture();
-	ofTexture getFlowRawTexture();
+		void drawFlowGrid(const ofRectangle & rect);
+		void drawFlowGridRaw(const ofRectangle & rect);
+		void drawReposition(const ofRectangle & rect);
+
+		void drawFlowGrid(int x,int y);
+		void drawFlowGridRaw(int x,int y);
+		void drawReposition(int x,int y);
      
-private: 
+		bool isSetup() { return flowIsSetup;}
+	
+		int getWidth()  { return width; }
+		int getHeight() { return height; }
 
-	int w, h;  
+		ofTexture& getFlowBlurTexture();
+		ofTexture& getFlowRawTexture();
 
-	float lambda;
-	float blurAmount;
-	float displaceAmount; 
+		ofParameter<float> lambda;
+		ofParameter<float> blurAmount;
+		ofParameter<float> displaceAmount; 
+		ofParameter<float> flowScale; 
 
+	private: 
 
-	FlowShader flowShader;
-    ofFbo  lastTex;  
-    ofFbo fboFlow,fboBlurH,fboBlurV,fboRepos; 
+		int width, height;  
+
+		ofFbo  lastTex;  
+		ofFbo fboFlow,fboBlurH,fboBlurV,fboRepos;
+
+		FlowShader flowShader;
+
+		bool flowIsSetup;
 };
