@@ -31,9 +31,8 @@ string FlowShader::getVertShader()
 
 	if( ofIsGLProgrammableRenderer() )
 	{
-		shaderProgram = ofFile("Shaders/OpticalFlowSimple/GL3/Default.vert").readToBuffer().getData();
+		//shaderProgram = ofFile("Shaders/OpticalFlowSimple/GL3/Default.vert").readToBuffer().getData();
 
-		/*
 		// Begin GL3 version
 		// We can't use '#' inside STRINGIFY
 		shaderProgram = string("#version 330\nprecision highp float;\n") + STRINGIFY(
@@ -60,7 +59,6 @@ string FlowShader::getVertShader()
 		}
 		);	
 		// End GL3 version
-		*/
 	}
 	else 
 	{
