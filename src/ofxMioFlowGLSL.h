@@ -11,7 +11,7 @@ class ofxMioFlowGLSL
 
 		void setup(int wI,int hI);
 
-		void update(ofTexture& cur, bool _runReposition);
+		void update(ofTexture& cur, bool _runReposition );
 
 		void drawFlowGrid(const ofRectangle & rect);
 		void drawFlowGridRaw(const ofRectangle & rect);
@@ -31,15 +31,19 @@ class ofxMioFlowGLSL
 
 		ofParameter<float> lambda;
 		ofParameter<float> blurAmount;
+		ofParameter<int>   numBlurPasses;
 		ofParameter<float> displaceAmount; 
 		ofParameter<float> flowScale; 
+
+		ofFbo lastTex;  
+		ofFbo fboFlow;
+		ofFbo fboBlurH,fboBlurV;
+		ofFbo fboRepos;
 
 	private: 
 
 		int width, height;  
 
-		ofFbo  lastTex;  
-		ofFbo fboFlow,fboBlurH,fboBlurV,fboRepos;
 
 		FlowShader flowShader;
 

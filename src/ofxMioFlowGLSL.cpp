@@ -4,6 +4,11 @@
 // --------------------------------------------------
 ofxMioFlowGLSL::ofxMioFlowGLSL()
 {
+	lambda = 0.1;
+	blurAmount = 5;
+	displaceAmount = 0.5;
+	flowScale = 1.0;
+
 	flowIsSetup = false;
 }
 
@@ -45,29 +50,17 @@ void ofxMioFlowGLSL::setup(int wI,int hI)
 		ofClear(0,0,0,0);  
 	fboRepos.end();
 
-
-	lambda = 0.1;
-	blurAmount = 5;
-	displaceAmount = 0.5;
-	flowScale = 1.0;
-
 	flowShader.setup();
 
 	flowIsSetup = true;
+
+	//cout << "Setup flow " << width << ", " << height << endl;
 }
 
 // --------------------------------------------------
-void ofxMioFlowGLSL::update( ofTexture& cur, bool runReposition) 
+void ofxMioFlowGLSL::update( ofTexture& cur, bool runReposition ) 
 {
-	//cout << cur.isAllocated() << endl;
-	//cout << "lastTex.isAllocated() " << lastTex.isAllocated() << endl;
-	//cout << "fboFlow.isAllocated() " << fboFlow.isAllocated() << endl;
-	//cout << "fboBlurH.isAllocated() " << fboBlurH.isAllocated() << endl;
-	//cout << "fboBlurV.isAllocated() " << fboBlurV.isAllocated() << endl;
-	//cout << "fboRepos.isAllocated() " << fboRepos.isAllocated() << endl;
-
-
-	//flow Process
+	// Flow Process
 	///////////////////////////////////////////////
 	fboFlow.begin(); 
 		ofClear(0);
@@ -85,34 +78,42 @@ void ofxMioFlowGLSL::update( ofTexture& cur, bool runReposition)
 	fboFlow.end();  
 
 
-	//blur Process
+	// Blur Process
 	///////////////////////////////////////////////
-	fboBlurH.begin();  
-		flowShader.blur.begin();      
-			flowShader.blur.setUniformTexture("texture", fboFlow, 0); 
-			flowShader.blur.setUniform1f("blurSize", blurAmount);
-			flowShader.blur.setUniform1f("sigma", blurAmount/2.0); 
-			flowShader.blur.setUniform2f("texOffset",2.0,2.0);
-			flowShader.blur.setUniform1f("horizontalPass", 1.0);
 
-			fboFlow.draw(0,0,width,height);
+	// Save the fame we're going to priocess into fboBlurV so that we can loop
+	fboBlurV.begin();
+		fboFlow.draw(0,0);
+	fboBlurV.end();
 
-		flowShader.blur.end();  
-	fboBlurH.end(); 
+	for( int i = 0; i < numBlurPasses; i++ )
+	{
+		fboBlurH.begin();  
+			flowShader.blur.begin();      
+				flowShader.blur.setUniformTexture("texture", fboFlow, 0); 
+				flowShader.blur.setUniform1f("blurSize", blurAmount);
+				flowShader.blur.setUniform1f("sigma", blurAmount/2.0); 
+				flowShader.blur.setUniform2f("texOffset",2.0,2.0);
+				flowShader.blur.setUniform1f("horizontalPass", 1.0);
 
+				fboBlurV.draw(0,0,width,height);
 
-	fboBlurV.begin();  
-		flowShader.blur.begin();      
-			flowShader.blur.setUniformTexture("texture",fboBlurH, 0); 
-			flowShader.blur.setUniform1f("blurSize", blurAmount);
-			flowShader.blur.setUniform1f("sigma", blurAmount/2.0); 
-			flowShader.blur.setUniform2f("texOffset",2.0,2.0);
-			flowShader.blur.setUniform1f("horizontalPass", 0.0);
+			flowShader.blur.end();  
+		fboBlurH.end(); 
 
-			fboBlurH.draw(0,0,width,height);
+		fboBlurV.begin();  
+			flowShader.blur.begin();      
+				flowShader.blur.setUniformTexture("texture",fboBlurH, 0); 
+				flowShader.blur.setUniform1f("blurSize", blurAmount);
+				flowShader.blur.setUniform1f("sigma", blurAmount/2.0); 
+				flowShader.blur.setUniform2f("texOffset",2.0,2.0);
+				flowShader.blur.setUniform1f("horizontalPass", 0.0);
 
-		flowShader.blur.end();  
-	fboBlurV.end(); 
+				fboBlurH.draw(0,0,width,height);
+
+			flowShader.blur.end();  
+		fboBlurV.end(); 
+	}
 
 	// Save latest frame
 	lastTex.begin();
@@ -121,7 +122,7 @@ void ofxMioFlowGLSL::update( ofTexture& cur, bool runReposition)
 
 	if( runReposition )
 	{
-		//repos Process
+		//Reposition Process
 		///////////////////////////////////////////////
 		fboRepos.begin();  
 			flowShader.repos.begin();       

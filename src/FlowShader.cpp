@@ -59,6 +59,7 @@ string FlowShader::getVertShader()
 		}
 		);	
 		// End GL3 version
+		
 	}
 	else 
 	{
@@ -288,7 +289,6 @@ string FlowShader::getReposShader()
 	return shaderProgram;
 }
 
-
 //-----------------------------------------------------------------------------------------
 //
 // Vertical and Horizontal Blur
@@ -368,7 +368,7 @@ string FlowShader::getBlurShader()
 			}
 
 			vec4 finColor = avgValue / coefficientSum;
-			fragColor = getColorCoded(finColor.x, finColor.y,vec2(1,1));
+			fragColor = getColorCoded(finColor.x, finColor.y,vec2(1.0,1.0));
 		}
 		);
 		// End GL3 version
@@ -436,7 +436,7 @@ string FlowShader::getBlurShader()
 
 			vec4 finColor = avgValue / coefficientSum;
 
-			gl_FragColor = getColorCoded(finColor.x, finColor.y,vec2(1,1));
+			gl_FragColor = getColorCoded(finColor.x, finColor.y,vec2(1.0,1.0));
 		}
 		);
 		// End GL2 version
