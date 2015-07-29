@@ -3,8 +3,10 @@
 //Disclaimer: The flow shader contains code from Andrew Benson. http://abstrakt.vade.info/
 
 
-void FlowShader::setup(){
-
+//-----------------------------------------------------------------------------------------
+//
+void FlowShader::setup()
+{
 	string vertShader = getVertShader();
 	repos.setupShaderFromSource(GL_VERTEX_SHADER, vertShader);
 	repos.setupShaderFromSource(GL_FRAGMENT_SHADER, getReposShader());
@@ -19,176 +21,426 @@ void FlowShader::setup(){
 	blur.linkProgram();
 }
 
-///Vertex Shader Texture grabbing
-string FlowShader::getVertShader(){
-	string shaderProgram = STRINGIFY(
+
+//-----------------------------------------------------------------------------------------
+//
+// Vertex Shader Texture grabbing
+string FlowShader::getVertShader()
+{
+	string shaderProgram = "";
+
+	if( ofIsGLProgrammableRenderer() )
+	{
+		//shaderProgram = ofFile("Shaders/OpticalFlowSimple/GL3/Default.vert").readToBuffer().getData();
+
+		// Begin GL3 version
+		// We can't use '#' inside STRINGIFY
+		shaderProgram = string("#version 330\nprecision highp float;\n") + STRINGIFY(
+		layout(location = 0) in vec4  position;
+		layout(location = 1) in vec4  color;
+		layout(location = 2) in vec3  normal;
+		layout(location = 3) in vec2  texcoord;
+
+		uniform mat4 projectionMatrix;
+		uniform mat4 modelViewMatrix;
+		uniform mat4 modelViewProjectionMatrix;
+		uniform mat4 normalMatrix;
+		uniform mat4 textureMatrix;
+
+		out VertexAttrib {
+			vec2 texcoord;
+		} vertex;
+
+		void main()  
+		{  
+			//vertex.texcoord = textureMatrix * texcoord;
+			vertex.texcoord = texcoord;
+			gl_Position = modelViewProjectionMatrix * position;
+		}
+		);	
+		// End GL3 version
+		
+	}
+	else 
+	{
+		// Begin GL2 version
+		shaderProgram = STRINGIFY(
 		varying vec2 texCoord;  
-	void main()  
-	{  
-		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;   
-		texCoord = vec2(gl_TextureMatrix[0] * gl_MultiTexCoord0);  
+		void main()  
+		{  
+			gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;   
+			texCoord = vec2(gl_TextureMatrix[0] * gl_MultiTexCoord0);  
+		}
+
+		);
+		// End GL2 version
 	}
-	);
+
 	return shaderProgram;
 }
 
-///Optical Flow modification from Andrew Benson
-string FlowShader::getFlowShader(){
-	string shaderProgram = STRINGIFY(
+
+//-----------------------------------------------------------------------------------------
+//
+// Optical Flow modification from Andrew Benson
+string FlowShader::getFlowShader()
+{
+	string shaderProgram = "";
+
+	if( ofIsGLProgrammableRenderer() )
+	{
+		//shaderProgram = ofFile("Shaders/OpticalFlowSimple/GL3/Flow.frag").readToBuffer().getData();
+
+		// Begin GL3 version
+		shaderProgram = string("#version 330\nprecision highp float;\n") + STRINGIFY(
 		uniform sampler2DRect tex0;  
-	uniform sampler2DRect tex1;  
+		uniform sampler2DRect tex1;  
 
+		uniform vec2 scale;  
+		uniform vec2 offset;  
+		uniform float lambda;   
 
-	uniform vec2 scale;  
-	uniform vec2 offset;  
-	uniform float lambda;   
-	varying vec2 texCoord;  
+		in VertexAttrib {
+			vec2 texcoord;
+		} vertex;
 
+		out vec4 fragColor;
 
-	vec4 getColorCoded(float x, float y,vec2 scale) {
-		vec2 xout = vec2(max(x,0.),abs(min(x,0.)))*scale.x;
-		vec2 yout = vec2(max(y,0.),abs(min(y,0.)))*scale.y;
-		float dirY = 1;
-		if (yout.x > yout.y)  dirY=0.90;
-		return vec4(xout.xy,max(yout.x,yout.y),dirY);
+		vec4 getColorCoded(float x, float y,vec2 scale) 
+		{
+			vec2 xout = vec2(max(x,0.),abs(min(x,0.)))*scale.x;
+			vec2 yout = vec2(max(y,0.),abs(min(y,0.)))*scale.y;
+			float dirY = 1.0;
+			if (yout.x > yout.y)  dirY=0.90;
+			return vec4(xout.xy,max(yout.x,yout.y),dirY);
+		}
+
+		vec4 getGrayScale(vec4 col) 
+		{
+			float gray = dot(vec3(col.x, col.y, col.z), vec3(0.3, 0.59, 0.11));
+			return vec4(gray,gray,gray,1);
+		}
+
+		vec4 texture2DRectGray(sampler2DRect tex, vec2 coord) 
+		{
+			return getGrayScale(texture2DRect(tex, coord));
+		}
+
+		void main()  
+		{     
+			vec4 a = texture2DRectGray(tex0, vertex.texcoord);
+			vec4 b = texture2DRectGray(tex1, vertex.texcoord);
+			vec2 x1 = vec2(offset.x,0.);
+			vec2 y1 = vec2(0.,offset.y);
+
+			//get the difference
+			vec4 curdif = b-a;
+
+			//calculate the gradient
+			//for X________________
+			vec4 gradx = texture2DRectGray(tex1, vertex.texcoord+x1)-texture2DRectGray(tex1, vertex.texcoord-x1);
+			gradx += texture2DRectGray(tex0, vertex.texcoord+x1)-texture2DRectGray(tex0, vertex.texcoord-x1);
+
+			//for Y________________
+			vec4 grady = texture2DRectGray(tex1, vertex.texcoord+y1)-texture2DRectGray(tex1, vertex.texcoord-y1);
+			grady += texture2DRectGray(tex0, vertex.texcoord+y1)-texture2DRectGray(tex0, vertex.texcoord-y1);
+
+			vec4 gradmag = sqrt((gradx*gradx)+(grady*grady)+vec4(lambda));
+
+			vec4 vx = curdif*(gradx/gradmag);
+			vec4 vy = curdif*(grady/gradmag);
+
+			fragColor = getColorCoded(vx.r,vy.r,scale);   
+		}  
+		);	
+		// End GL3 version
 	}
+	else 
+	{
+		// Begin GL2 version
+		shaderProgram = STRINGIFY(
+		uniform sampler2DRect tex0;  
+		uniform sampler2DRect tex1;  
 
 
-	vec4 getGrayScale(vec4 col) {
-		float gray = dot(vec3(col.x, col.y, col.z), vec3(0.3, 0.59, 0.11));
-		return vec4(gray,gray,gray,1);
+		uniform vec2 scale;  
+		uniform vec2 offset;  
+		uniform float lambda;   
+		varying vec2 texCoord;
+
+		vec4 getColorCoded(float x, float y,vec2 scale) 
+		{
+			vec2 xout = vec2(max(x,0.),abs(min(x,0.)))*scale.x;
+			vec2 yout = vec2(max(y,0.),abs(min(y,0.)))*scale.y;
+			float dirY = 1.0;
+			if (yout.x > yout.y)  dirY=0.90;
+			return vec4(xout.xy,max(yout.x,yout.y),dirY);
+		}
+
+		vec4 getGrayScale(vec4 col) 
+		{
+			float gray = dot(vec3(col.x, col.y, col.z), vec3(0.3, 0.59, 0.11));
+			return vec4(gray,gray,gray,1);
+		}
+
+		vec4 texture2DRectGray(sampler2DRect tex, vec2 coord) 
+		{
+			return getGrayScale(texture2DRect(tex, coord));
+		}
+
+		void main()  
+		{     
+			vec4 a = texture2DRectGray(tex0, texCoord);
+			vec4 b = texture2DRectGray(tex1, texCoord);
+			vec2 x1 = vec2(offset.x,0.);
+			vec2 y1 = vec2(0.,offset.y);
+
+			//get the difference
+			vec4 curdif = b-a;
+
+			//calculate the gradient
+			//for X________________
+			vec4 gradx = texture2DRectGray(tex1, texCoord+x1)-texture2DRectGray(tex1, texCoord-x1);
+			gradx += texture2DRectGray(tex0, texCoord+x1)-texture2DRectGray(tex0, texCoord-x1);
+
+
+			//for Y________________
+			vec4 grady = texture2DRectGray(tex1, texCoord+y1)-texture2DRectGray(tex1, texCoord-y1);
+			grady += texture2DRectGray(tex0, texCoord+y1)-texture2DRectGray(tex0, texCoord-y1);
+
+			vec4 gradmag = sqrt((gradx*gradx)+(grady*grady)+vec4(lambda));
+
+			vec4 vx = curdif*(gradx/gradmag);
+			vec4 vy = curdif*(grady/gradmag);
+
+			gl_FragColor = getColorCoded(vx.r,vy.r,scale);   
+		}  
+		);
+		// End GL2 version
 	}
-	vec4 texture2DRectGray(sampler2DRect tex, vec2 coord) {
-		return getGrayScale(texture2DRect(tex, coord));
-	}
-
-	void main()  
-	{     
-		vec4 a = texture2DRectGray(tex0, texCoord);
-		vec4 b = texture2DRectGray(tex1, texCoord);
-		vec2 x1 = vec2(offset.x,0.);
-		vec2 y1 = vec2(0.,offset.y);
-
-		//get the difference
-		vec4 curdif = b-a;
-
-		//calculate the gradient
-		//for X________________
-		vec4 gradx = texture2DRectGray(tex1, texCoord+x1)-texture2DRectGray(tex1, texCoord-x1);
-		gradx += texture2DRectGray(tex0, texCoord+x1)-texture2DRectGray(tex0, texCoord-x1);
-
-
-		//for Y________________
-		vec4 grady = texture2DRectGray(tex1, texCoord+y1)-texture2DRectGray(tex1, texCoord-y1);
-		grady += texture2DRectGray(tex0, texCoord+y1)-texture2DRectGray(tex0, texCoord-y1);
-
-		vec4 gradmag = sqrt((gradx*gradx)+(grady*grady)+vec4(lambda));
-
-		vec4 vx = curdif*(gradx/gradmag);
-		vec4 vy = curdif*(grady/gradmag);
-
-		gl_FragColor = getColorCoded(vx.r,vy.r,scale);   
-	}  
-	);
 
 	return shaderProgram;
 }
 
+//-----------------------------------------------------------------------------------------
+//
+// Reposition
+string FlowShader::getReposShader()
+{
+	string shaderProgram = "";
 
-///Reposition
-string FlowShader::getReposShader(){
-	string shaderProgram = STRINGIFY(
-	varying vec2 texCoord;  
-	uniform vec2 amt;  
-	uniform sampler2DRect tex0;  
-	uniform sampler2DRect tex1;  
+	if( ofIsGLProgrammableRenderer() )
+	{
+		//shaderProgram = ofFile("Shaders/OpticalFlowSimple/GL3/Reposition.frag").readToBuffer().getData();
 
-	vec2 get2DOff(sampler2DRect tex ,vec2 coord) {
-		vec4 col = texture2DRect(tex, coord);
-		if (col.w >0.95)  col.z=col.z*-1;
-		return vec2(-1*(col.y-col.x),col.z);//,1,1);
+		// Begin GL3 version
+		shaderProgram = string("#version 330\nprecision highp float;\n") + STRINGIFY(
+		uniform vec2 amt; 
+		uniform sampler2DRect tex0;
+		uniform sampler2DRect tex1;
+
+		in VertexAttrib {
+			vec2 texcoord;
+		} vertex;
+
+		out vec4 fragColor;
+
+		vec2 get2DOff(sampler2DRect tex ,vec2 coord) 
+		{
+			vec4 col = texture2DRect(tex, coord);
+			if (col.w >0.95)  col.z=col.z*-1.0;
+			return vec2(-1.0*(col.y-col.x),col.z);//,1,1);
+		}
+
+		void main()  
+		{  
+			vec2 coord =  get2DOff(tex1, vertex.texcoord)*amt+vertex.texcoord;  //relative coordinates  
+			vec4 repos = texture2DRect(tex0, coord);  
+			fragColor = repos;
+		} 
+		);
+		// End GL3 version
 	}
+	else 
+	{
+		// Begin GL2 version
+		shaderProgram = STRINGIFY(
+		varying vec2 texCoord;  
+		uniform vec2 amt;  
+		uniform sampler2DRect tex0;  
+		uniform sampler2DRect tex1;  
 
-	void main()  
-	{  
-		vec2 coord =  get2DOff(tex1 ,texCoord)*amt+texCoord;  //relative coordinates  
-		vec4 repos = texture2DRect(tex0, coord);  
-		gl_FragColor = repos;
-	} 
-	);
+		vec2 get2DOff(sampler2DRect tex ,vec2 coord) {
+			vec4 col = texture2DRect(tex, coord);
+			if (col.w >0.95)  col.z=col.z*-1.0;
+			return vec2(-1.0*(col.y-col.x),col.z);//,1,1);
+		}
+
+		void main()  
+		{  
+			vec2 coord =  get2DOff(tex1 ,texCoord)*amt+texCoord;  //relative coordinates  
+			vec4 repos = texture2DRect(tex0, coord);  
+			gl_FragColor = repos;
+		} 
+		);
+		// End GL3 version
+	}
 
 	return shaderProgram;
 }
 
-//Vertical and Horizontal Blur
-string FlowShader::getBlurShader(){
-	string shaderProgram = STRINGIFY(
-	uniform sampler2DRect texture;
-	uniform vec2 texOffset;
-	varying vec2 texCoord;
+//-----------------------------------------------------------------------------------------
+//
+// Vertical and Horizontal Blur
+string FlowShader::getBlurShader()
+{
+	string shaderProgram = "";
 
-	uniform float blurSize;       
-	uniform float horizontalPass; // 0 or 1 to indicate vertical or horizontal pass
-	uniform float sigma;        // The sigma value for the gaussian function: higher value means more blur
-	// A good value for 9x9 is around 3 to 5
-	// A good value for 7x7 is around 2.5 to 4
-	// A good value for 5x5 is around 2 to 3.5
-	// ... play around with this based on what you need :)
+	if( ofIsGLProgrammableRenderer() )
+	{
+		//shaderProgram = ofFile("Shaders/OpticalFlowSimple/GL3/Blur.frag").readToBuffer().getData();
 
-	const float pi = 3.14159265;
+		// Begin GL3 version
+		shaderProgram = string("#version 330\nprecision highp float;\n") + STRINGIFY(
+		uniform sampler2DRect texture;
+		uniform vec2 texOffset;
 
-	vec4 get2DOff(sampler2DRect tex ,vec2 coord) {
-		vec4 col = texture2DRect(tex, coord);
-		if (col.w >0.95)  col.z=col.z*-1;
-		return vec4(col.y-col.x,col.z,1,1);
-	}
+		uniform float blurSize;       
+		uniform float horizontalPass; // 0 or 1 to indicate vertical or horizontal pass
+		uniform float sigma;        // The sigma value for the gaussian function: higher value means more blur
+		// A good value for 9x9 is around 3 to 5
+		// A good value for 7x7 is around 2.5 to 4
+		// A good value for 5x5 is around 2 to 3.5
+		// ... play around with this based on what you need :)
 
+		in VertexAttrib {
+			vec2 texcoord;
+		} vertex;
 
-	vec4 getColorCoded(float x, float y,vec2 scale) {
-		vec2 xout = vec2(max(x,0.),abs(min(x,0.)))*scale.x;
-		vec2 yout = vec2(max(y,0.),abs(min(y,0.)))*scale.y;
-		float dirY = 1;
-		if (yout.x > yout.y)  dirY=0.90;
-		return vec4(xout.yx,max(yout.x,yout.y),dirY);
-	}
+		out vec4 fragColor;
 
-	void main() {  
-		float numBlurPixelsPerSide = float(blurSize / 2); 
+		const float pi = 3.14159265;
 
-		vec2 blurMultiplyVec = 0 < horizontalPass ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+		vec4 get2DOff(sampler2DRect tex ,vec2 coord) 
+		{
+			vec4 col = texture2DRect(tex, coord);
+			if (col.w >0.95)  col.z=col.z*-1.0;
+			return vec4(col.y-col.x,col.z,1.0,1.0);
+		}
 
-		// Incremental Gaussian Coefficent Calculation (See GPU Gems 3 pp. 877 - 889)
-		vec3 incrementalGaussian;
-		incrementalGaussian.x = 1.0 / (sqrt(2.0 * pi) * sigma);
-		incrementalGaussian.y = exp(-0.5 / (sigma * sigma));
-		incrementalGaussian.z = incrementalGaussian.y * incrementalGaussian.y;
+		vec4 getColorCoded(float x, float y,vec2 scale) 
+		{
+			vec2 xout = vec2(max(x,0.),abs(min(x,0.)))*scale.x;
+			vec2 yout = vec2(max(y,0.),abs(min(y,0.)))*scale.y;
+			float dirY = 1.0;
+			if (yout.x > yout.y)  dirY=0.90;
+			return vec4(xout.yx,max(yout.x,yout.y),dirY);
+		}
 
-		vec4 avgValue = vec4(0.0, 0.0, 0.0, 0.0);
-		float coefficientSum = 0.0;
+		void main() 
+		{  
+			float numBlurPixelsPerSide = float(blurSize / 2.0);
 
-		// Take the central sample first...
-		avgValue += get2DOff(texture, texCoord.st) * incrementalGaussian.x;
-		coefficientSum += incrementalGaussian.x;
-		incrementalGaussian.xy *= incrementalGaussian.yz;
+			vec2 blurMultiplyVec = 0.0 < horizontalPass ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
 
-		// Go through the remaining 8 vertical samples (4 on each side of the center)
+			// Incremental Gaussian Coefficent Calculation (See GPU Gems 3 pp. 877 - 889)
+			vec3 incrementalGaussian;
+			incrementalGaussian.x = 1.0 / (sqrt(2.0 * pi) * sigma);
+			incrementalGaussian.y = exp(-0.5 / (sigma * sigma));
+			incrementalGaussian.z = incrementalGaussian.y * incrementalGaussian.y;
 
-    	for (float i = 1.0; i <= numBlurPixelsPerSide; i++) { 
-			avgValue += get2DOff(texture, texCoord.st - i * texOffset * 
-				blurMultiplyVec) * incrementalGaussian.x;         
-			avgValue += get2DOff(texture, texCoord.st + i * texOffset * 
-				blurMultiplyVec) * incrementalGaussian.x;         
-			coefficientSum += 2.0 * incrementalGaussian.x;
+			vec4 avgValue = vec4(0.0, 0.0, 0.0, 0.0);
+			float coefficientSum = 0.0;
+
+			// Take the central sample first...
+			avgValue += get2DOff(texture, vertex.texcoord.st) * incrementalGaussian.x;
+			coefficientSum += incrementalGaussian.x;
 			incrementalGaussian.xy *= incrementalGaussian.yz;
+
+			// Go through the remaining 8 vertical samples (4 on each side of the center)
+
+    		for (float i = 1.0; i <= numBlurPixelsPerSide; i++) 
+			{ 
+				avgValue += get2DOff(texture, vertex.texcoord.st - i * texOffset * blurMultiplyVec) * incrementalGaussian.x;         
+				avgValue += get2DOff(texture, vertex.texcoord.st + i * texOffset * blurMultiplyVec) * incrementalGaussian.x;         
+				coefficientSum += 2.0 * incrementalGaussian.x;
+				incrementalGaussian.xy *= incrementalGaussian.yz;
+			}
+
+			vec4 finColor = avgValue / coefficientSum;
+			fragColor = getColorCoded(finColor.x, finColor.y,vec2(1.0,1.0));
+		}
+		);
+		// End GL3 version
+	}
+	else 
+	{
+		// Begin GL2 version
+		shaderProgram = STRINGIFY(
+		uniform sampler2DRect texture;
+		uniform vec2 texOffset;
+		varying vec2 texCoord;
+
+		uniform float blurSize;       
+		uniform float horizontalPass; // 0 or 1 to indicate vertical or horizontal pass
+		uniform float sigma;        // The sigma value for the gaussian function: higher value means more blur
+		// A good value for 9x9 is around 3 to 5
+		// A good value for 7x7 is around 2.5 to 4
+		// A good value for 5x5 is around 2 to 3.5
+		// ... play around with this based on what you need :)
+
+		const float pi = 3.14159265;
+
+		vec4 get2DOff(sampler2DRect tex ,vec2 coord) {
+			vec4 col = texture2DRect(tex, coord);
+			if (col.w >0.95)  col.z=col.z*-1.0;
+			return vec4(col.y-col.x,col.z,1.0,1.0);
 		}
 
 
-		vec4 finColor = avgValue / coefficientSum;
+		vec4 getColorCoded(float x, float y,vec2 scale) {
+			vec2 xout = vec2(max(x,0.),abs(min(x,0.)))*scale.x;
+			vec2 yout = vec2(max(y,0.),abs(min(y,0.)))*scale.y;
+			float dirY = 1.0;
+			if (yout.x > yout.y)  dirY=0.90;
+			return vec4(xout.yx,max(yout.x,yout.y),dirY);
+		}
 
+		void main() {  
+			float numBlurPixelsPerSide = float(blurSize / 2.0);
 
-		gl_FragColor = getColorCoded(finColor.x, finColor.y,vec2(1,1));
+			vec2 blurMultiplyVec = 0.0 < horizontalPass ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+
+			// Incremental Gaussian Coefficent Calculation (See GPU Gems 3 pp. 877 - 889)
+			vec3 incrementalGaussian;
+			incrementalGaussian.x = 1.0 / (sqrt(2.0 * pi) * sigma);
+			incrementalGaussian.y = exp(-0.5 / (sigma * sigma));
+			incrementalGaussian.z = incrementalGaussian.y * incrementalGaussian.y;
+
+			vec4 avgValue = vec4(0.0, 0.0, 0.0, 0.0);
+			float coefficientSum = 0.0;
+
+			// Take the central sample first...
+			avgValue += get2DOff(texture, texCoord.st) * incrementalGaussian.x;
+			coefficientSum += incrementalGaussian.x;
+			incrementalGaussian.xy *= incrementalGaussian.yz;
+
+			// Go through the remaining 8 vertical samples (4 on each side of the center)
+
+    		for (float i = 1.0; i <= numBlurPixelsPerSide; i++) { 
+				avgValue += get2DOff(texture, texCoord.st - i * texOffset * blurMultiplyVec) * incrementalGaussian.x;         
+				avgValue += get2DOff(texture, texCoord.st + i * texOffset * blurMultiplyVec) * incrementalGaussian.x;         
+				coefficientSum += 2.0 * incrementalGaussian.x;
+				incrementalGaussian.xy *= incrementalGaussian.yz;
+			}
+
+			vec4 finColor = avgValue / coefficientSum;
+
+			gl_FragColor = getColorCoded(finColor.x, finColor.y,vec2(1.0,1.0));
+		}
+		);
+		// End GL2 version
 	}
-	);
 
 	return shaderProgram;
 }
