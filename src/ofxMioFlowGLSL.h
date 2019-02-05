@@ -18,6 +18,9 @@ public:
 	ofTexture getFlowBlurTexture();
 	ofTexture getFlowRawTexture();
      
+    int getWidth() { return w; }
+    int getHeight() { return h; }
+     
 private: 
 
 	int w, h;  
