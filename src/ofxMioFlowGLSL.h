@@ -24,11 +24,7 @@ public:
 private: 
 
 	int w, h;  
-
-	float lambda;
-	float blurAmount;
-	float displaceAmount; 
-
+    ofPlanePrimitive quad;
 
 	FlowShader flowShader;
     ofFbo  lastTex;  

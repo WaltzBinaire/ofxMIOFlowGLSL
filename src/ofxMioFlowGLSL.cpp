@@ -41,7 +41,11 @@ void ofxMioFlowGLSL::setup(int wI,int hI, int internalformat) {
 	displaceAmount=0.5;
 	flowShader.setup();
 
+    quad.set(w, -h, 2, 2); // vertical flip
+    quad.setPosition(w/2, h/2, 0);
+    quad.mapTexCoords(1, 1, w, h);
 }
+
 void ofxMioFlowGLSL::update(ofTexture cur, float lambdaI,float blurAmountI, float displaceAmountI ) {
 	lambda=lambdaI;
 	blurAmount=blurAmountI;
@@ -62,12 +66,7 @@ void ofxMioFlowGLSL::update(ofTexture cur) {
 		flowShader.flow.setUniform1f("lambda",lambda);  
 		flowShader.flow.setUniformTexture("tex0", cur, 0);  
 		flowShader.flow.setUniformTexture("tex1", lastTex, 1);        
-		glBegin( GL_QUADS );  
-		glTexCoord2f(0,0);          glVertex3i(0, 0,0);  
-		glTexCoord2f(0, h);          glVertex3i(0, h,0);  
-		glTexCoord2f(w, h);          glVertex3i(w, h,0);  
-		glTexCoord2f(w, 0);          glVertex3i(w, 0,0);  
-		glEnd();  
+    quad.draw();
 		flowShader.flow.end();  
 		fboFlow.end();  
 
@@ -81,14 +80,7 @@ void ofxMioFlowGLSL::update(ofTexture cur) {
         flowShader.blur.setUniform1f("sigma", blurAmount/2.0); 
 		flowShader.blur.setUniform2f("texOffset",2.0,2.0);
         flowShader.blur.setUniform1f("horizontalPass", 1.0);
-
-		glBegin( GL_QUADS );  
-		glTexCoord2f(0,0);          glVertex3i(0, 0,0);  
-		glTexCoord2f(0, h);          glVertex3i(0, h,0);  
-		glTexCoord2f(w, h);          glVertex3i(w, h,0);  
-		glTexCoord2f(w, 0);          glVertex3i(w, 0,0);  
-		glEnd();
-		flowShader.blur.end();  
+    quad.draw();
 		fboBlurH.end(); 
 
 
@@ -99,13 +91,7 @@ void ofxMioFlowGLSL::update(ofTexture cur) {
         flowShader.blur.setUniform1f("sigma", blurAmount/2.0); 
 		flowShader.blur.setUniform2f("texOffset",2.0,2.0);
         flowShader.blur.setUniform1f("horizontalPass", 0.0);
-
-		glBegin( GL_QUADS );  
-		glTexCoord2f(0,0);          glVertex3i(0, 0,0);  
-		glTexCoord2f(0, h);          glVertex3i(0, h,0);  
-		glTexCoord2f(w, h);          glVertex3i(w, h,0);  
-		glTexCoord2f(w, 0);          glVertex3i(w, 0,0);  
-		glEnd();
+    quad.draw();
 		flowShader.blur.end();  
 		fboBlurV.end(); 
 
@@ -116,12 +102,7 @@ void ofxMioFlowGLSL::update(ofTexture cur) {
 		flowShader.repos.setUniform2f("amt", displaceAmount*2000, displaceAmount*2000);  
 		flowShader.repos.setUniformTexture("tex0", cur, 0);  
 		flowShader.repos.setUniformTexture("tex1", fboBlurV, 1);  
-		glBegin( GL_QUADS );  
-		glTexCoord2f(0,0);          glVertex3i(0, 0,0);  
-		glTexCoord2f(0, h);          glVertex3i(0, h,0);  
-		glTexCoord2f(w, h);          glVertex3i(w, h,0);  
-		glTexCoord2f(w, 0);          glVertex3i(w, 0,0);  
-		glEnd();  
+    quad.draw();
 		flowShader.repos.end();  
 		fboRepos.end(); 
 
