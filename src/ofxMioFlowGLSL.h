@@ -15,10 +15,10 @@ public:
     bool doDrawFlowGridRaw = false;
     bool doDrawReposition = false;
 
-	void setup(int wI,int hI, int internalformat=GL_RGBA32F);
+    void setup(int wI,int hI, int internalformat=GL_RGBA32F);
 
-	void update(ofTexture cur);
-	void update(ofTexture cur, float lambdaI,float blurAmountI, float displaceAmountI );
+    void update(ofTexture cur);
+    void update(ofTexture cur, float lambdaI,float blurAmountI, float displaceAmountI );
 
     void draw(int x=0, int y=0);
     void drawFlowGrid(int x=0, int y=0);
@@ -26,17 +26,17 @@ public:
     void drawReposition(int x=0, int y=0);
     void drawPassthrough(ofTexture& cur, int x=0, int y=0);
 
-	ofTexture getFlowBlurTexture();
-	ofTexture getFlowRawTexture();
-     
+    ofTexture getFlowBlurTexture();
+    ofTexture getFlowRawTexture();
+
     int getWidth() { return w; }
     int getHeight() { return h; }
-     
+
 private: 
-	int w, h;  
+    int w, h;
     ofPlanePrimitive quad;
 
-	FlowShader flowShader;
-    ofFbo  lastTex;  
-    ofFbo fboFlow,fboBlurH,fboBlurV,fboRepos; 
+    FlowShader flowShader;
+    ofFbo  lastTex;
+    ofFbo fboFlow,fboBlurH,fboBlurV,fboRepos;
 };
