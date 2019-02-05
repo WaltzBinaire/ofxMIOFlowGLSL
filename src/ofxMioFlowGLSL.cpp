@@ -121,13 +121,6 @@ void ofxMioFlowGLSL::draw(int x, int y) {
     if(doDrawReposition) drawReposition(x, y);
 }
 
-void ofxMioFlowGLSL::drawPassthrough(ofTexture& cur, int x,int y) {
-    flowShader.pass.begin();
-    flowShader.pass.setUniformTexture("tex0", cur, 0);
-    quad.draw();
-    flowShader.repos.end();
-}
-
 
 void ofxMioFlowGLSL::drawFlowGridRaw(int x,int y) {
     fboFlow.draw(x,y);

@@ -34,10 +34,9 @@ void testApp::update(){
 void testApp::draw(){  
     ofBackground(0);
 
-    mioFlow.drawReposition(640,0);
+    mioFlow.drawReposition(0,0);
     mioFlow.drawFlowGrid(0,480);
     mioFlow.drawFlowGridRaw(640,480);
-    mioFlow.drawPassthrough(cam.getTexture(), 0, 0);
     ofSetColor(255);
     ofDrawBitmapString("oi -> " + ofToString(ofGetFrameRate()),20,20,0);
 }  

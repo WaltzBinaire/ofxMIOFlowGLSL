@@ -24,7 +24,6 @@ public:
     void drawFlowGrid(int x=0, int y=0);
     void drawFlowGridRaw(int x=0, int y=0);
     void drawReposition(int x=0, int y=0);
-    void drawPassthrough(ofTexture& cur, int x=0, int y=0);
 
     ofTexture getFlowBlurTexture();
     ofTexture getFlowRawTexture();
