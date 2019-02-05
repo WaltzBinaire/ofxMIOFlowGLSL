@@ -2,35 +2,35 @@
 #include "ofxMioFlowGLSL.h"
 
 
-void ofxMioFlowGLSL::setup(int wI,int hI) {
+void ofxMioFlowGLSL::setup(int wI,int hI, int internalformat) {
 	w=wI;
 	h=hI;
 
-	lastTex.allocate(w,h,GL_RGBA);  
+	lastTex.allocate(w,h,internalformat);  
 	lastTex.setUseTexture(true);  
 	lastTex.begin();  
 	ofClear(0,0,0,0);  
 	lastTex.end();
 
-	fboFlow.allocate(w,h,GL_RGBA);  
+	fboFlow.allocate(w,h,internalformat);  
 	fboFlow.setUseTexture(true);  
 	fboFlow.begin();  
 	ofClear(0,0,0,0);  
 	fboFlow.end();
 
-	fboBlurH.allocate(w,h,GL_RGBA);  
+	fboBlurH.allocate(w,h,internalformat);  
 	fboBlurH.setUseTexture(true);  
 	fboBlurH.begin();  
 	ofClear(0,0,0,0);  
 	fboBlurH.end();
 
-	fboBlurV.allocate(w,h,GL_RGBA);  
+	fboBlurV.allocate(w,h,internalformat);  
 	fboBlurV.setUseTexture(true);  
 	fboBlurV.begin();  
 	ofClear(0,0,0,0);  
 	fboBlurV.end();
 
-	fboRepos.allocate(w,h,GL_RGBA);  
+	fboRepos.allocate(w,h,internalformat);  
 	fboRepos.setUseTexture(true);  
 	fboRepos.begin();  
 	ofClear(0,0,0,0);  

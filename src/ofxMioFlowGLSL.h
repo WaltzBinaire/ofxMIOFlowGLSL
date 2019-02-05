@@ -6,7 +6,7 @@
 
 class ofxMioFlowGLSL  {
 public:
-	void setup(int wI,int hI);
+	void setup(int wI,int hI, int internalformat=GL_RGBA32F);
 
 	void update(ofTexture cur);
 	void update(ofTexture cur, float lambdaI,float blurAmountI, float displaceAmountI );
