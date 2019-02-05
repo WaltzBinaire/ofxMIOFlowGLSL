@@ -54,6 +54,7 @@ void ofxMioFlowGLSL::update(ofTexture cur, float lambdaI,float blurAmountI, floa
 }
 
 void ofxMioFlowGLSL::update(ofTexture cur) {
+    if(!enabled) return;
 
 	//flow Process
 		///////////////////////////////////////////////
@@ -112,6 +113,22 @@ void ofxMioFlowGLSL::update(ofTexture cur) {
 
 }
 
+
+void ofxMioFlowGLSL::draw(int x, int y) {
+    if(!enabled) return;
+    if(doDrawFlowGrid) drawFlowGrid(x, y);
+    if(doDrawFlowGridRaw) drawFlowGridRaw(x, y);
+    if(doDrawReposition) drawReposition(x, y);
+}
+
+void ofxMioFlowGLSL::drawPassthrough(ofTexture& cur, int x,int y) {
+    flowShader.pass.begin();
+    flowShader.pass.setUniformTexture("tex0", cur, 0);
+    quad.draw();
+    flowShader.repos.end();
+}
+
+
 void ofxMioFlowGLSL::drawFlowGridRaw(int x,int y) {
 fboFlow.draw(x,y);
 }
@@ -123,6 +140,7 @@ fboBlurV.draw(x,y);
 void ofxMioFlowGLSL::drawReposition(int x,int y) {
 fboRepos.draw(x,y);
 }
+
 ofTexture ofxMioFlowGLSL::getFlowBlurTexture() {
 	return fboBlurV.getTextureReference();
 }
