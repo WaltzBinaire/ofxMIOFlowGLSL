@@ -134,8 +134,8 @@ string FlowShader::getReposShader(){
 
                            vec2 get2DOff(sampler2DRect tex ,vec2 coord) {
                                vec4 col = texture2DRect(tex, coord);
-                               if (col.w >0.95)  col.z=col.z*-1.0;
-                               return vec2(-1.0*(col.y-col.x),col.z);//,1,1);
+                               if (col.w > 0.95) col.z *= -1.0;
+                               return vec2(col.x-col.y, col.z);
                            }
 
                            void main()
@@ -174,8 +174,8 @@ string FlowShader::getBlurShader(){
 
                            vec4 get2DOff(sampler2DRect tex ,vec2 coord) {
                                vec4 col = texture2DRect(tex, coord);
-                               if (col.w >0.95)  col.z=col.z*-1.0;
-                               return vec4(col.y-col.x,col.z,1.0,1.0);
+                               if (col.w > 0.95)  col.z *= -1.0;
+                               return vec4(col.y-col.x, col.z, 1.0, 1.0);
                            }
 
 

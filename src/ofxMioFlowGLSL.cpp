@@ -36,9 +36,6 @@ void ofxMioFlowGLSL::setup(int wI,int hI, int internalformat) {
     ofClear(0,0,0,0);
     fboRepos.end();
 
-    lambda=0.1;
-    blurAmount=5;
-    displaceAmount=0.5;
     flowShader.setup();
 
     quad.set(w, -h, 2, 2); // vertical flip
@@ -46,13 +43,6 @@ void ofxMioFlowGLSL::setup(int wI,int hI, int internalformat) {
     quad.mapTexCoords(1, 1, w, h);
 }
 
-void ofxMioFlowGLSL::update(const ofTexture& cur, float lambdaI, float blurAmountI, float displaceAmountI, bool readbackI) {
-    lambda = lambdaI;
-    blurAmount = blurAmountI;
-    displaceAmount = displaceAmountI;
-    readback = readbackI;
-    update(cur);
-}
 
 void ofxMioFlowGLSL::update(const ofTexture& cur) {
     if(!enabled) return;
@@ -101,7 +91,7 @@ void ofxMioFlowGLSL::update(const ofTexture& cur) {
     ///////////////////////////////////////////////
     fboRepos.begin();
     flowShader.repos.begin();
-    flowShader.repos.setUniform2f("amt", displaceAmount*2000, displaceAmount*2000);
+    flowShader.repos.setUniform2f("amt", displaceAmount, displaceAmount);
     flowShader.repos.setUniformTexture("tex0", cur, 0);
     flowShader.repos.setUniformTexture("tex1", fboBlurV, 1);
     quad.draw();
@@ -112,7 +102,7 @@ void ofxMioFlowGLSL::update(const ofTexture& cur) {
     cur.draw(0,0);
     lastTex.end();
 
-    if(readback) fboBlurV.readToPixels(flowPix);
+    if(doReadback) fboBlurV.readToPixels(flowPix);
 }
 
 
@@ -137,20 +127,33 @@ void ofxMioFlowGLSL::drawReposition(int x,int y) {
     fboRepos.draw(x,y);
 }
 
-void ofxMioFlowGLSL::drawVectors(int x,int y, float scale, int step) {
+void ofxMioFlowGLSL::drawVectors(int x,int y) {
+    if(!flowPix.isAllocated()) {
+        ofLogWarning("ofxMioFlowGLSL::drawVectors") << "flowPix not allocated. is doReadback enabled?";
+        return;
+    }
+
     ofPushStyle();
     ofPushMatrix();
-    for(int j=0; j<h; j+=step) {
-        for(int i=0; i<w; i+=step) {
+    ofTranslate(x, y);
+    for(int j=0; j<h; j+=drawVectorsStep) {
+        for(int i=0; i<w; i+=drawVectorsStep) {
             ofFloatColor c = flowPix.getColor(i, j);
             ofVec2f v = colorToVel(c);
-            v *= scale;
+            v *= drawVectorsScale;
             ofLine(i, j, i+v.x, j+v.y);
         }
     }
     ofPopMatrix();
     ofPopStyle();
 }
+
+//void ofxMioFlowGLSL::drawVectors(int x, int y, float scale, int step) {
+//    drawVectorsScale = scale;
+//    drawVectorsStep = step;
+//    drawVectors(x, y);
+//}
+
 
 ofTexture& ofxMioFlowGLSL::getFlowBlurTexture() {
     return fboBlurV.getTexture();
