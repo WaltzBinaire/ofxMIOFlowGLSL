@@ -60,7 +60,7 @@ string FlowShader::getFlowShader(){
     string shaderHeader3 = R"(
                            #version 150
                            in vec2 varyingtexcoord;
-                           out vec4 gl_FragColor;
+//                           out vec4 gl_FragColor; // automatically declared by openframeworks
                            )";
     string shaderProgram = R"(
                            uniform sampler2DRect tex0;
@@ -125,7 +125,7 @@ string FlowShader::getReposShader(){
     string shaderHeader3 = R"(
                            #version 150
                            in vec2 varyingtexcoord;
-                           out vec4 gl_FragColor;
+//                           out vec4 gl_FragColor; // automatically declared by openframeworks
                            )";
     string shaderProgram = R"(
                            uniform vec2 amt;
@@ -157,7 +157,7 @@ string FlowShader::getBlurShader(){
     string shaderHeader3 = R"(
                            #version 150
                            in vec2 varyingtexcoord;
-                           out vec4 gl_FragColor;
+//                           out vec4 gl_FragColor; // automatically declared by openframeworks
                            )";
     string shaderProgram = R"(
                            uniform sampler2DRect texture;
