@@ -65,38 +65,42 @@ void ofxMioFlowGLSL::update(const ofTexture& cur) {
 
     //blur Process
     ///////////////////////////////////////////////
-    fboBlurH.begin();
-    flowShader.blur.begin();
-    flowShader.blur.setUniformTexture("texture", fboFlow, 0);
-    flowShader.blur.setUniform1f("blurSize", blurAmount);
-    flowShader.blur.setUniform1f("sigma", blurAmount/2.0);
-    flowShader.blur.setUniform2f("texOffset",2.0,2.0);
-    flowShader.blur.setUniform1f("horizontalPass", 1.0);
-    quad.draw();
-    fboBlurH.end();
+    if(doShaderBlur) {
+        fboBlurH.begin();
+        flowShader.blur.begin();
+        flowShader.blur.setUniformTexture("texture", fboFlow, 0);
+        flowShader.blur.setUniform1f("blurSize", blurAmount);
+        flowShader.blur.setUniform1f("sigma", blurAmount/2.0);
+        flowShader.blur.setUniform2f("texOffset",2.0,2.0);
+        flowShader.blur.setUniform1f("horizontalPass", 1.0);
+        quad.draw();
+        fboBlurH.end();
 
 
-    fboBlurV.begin();
-    flowShader.blur.begin();
-    flowShader.blur.setUniformTexture("texture",fboBlurH, 0);
-    flowShader.blur.setUniform1f("blurSize", blurAmount);
-    flowShader.blur.setUniform1f("sigma", blurAmount/2.0);
-    flowShader.blur.setUniform2f("texOffset",2.0,2.0);
-    flowShader.blur.setUniform1f("horizontalPass", 0.0);
-    quad.draw();
-    flowShader.blur.end();
-    fboBlurV.end();
+        fboBlurV.begin();
+        flowShader.blur.begin();
+        flowShader.blur.setUniformTexture("texture",fboBlurH, 0);
+        flowShader.blur.setUniform1f("blurSize", blurAmount);
+        flowShader.blur.setUniform1f("sigma", blurAmount/2.0);
+        flowShader.blur.setUniform2f("texOffset",2.0,2.0);
+        flowShader.blur.setUniform1f("horizontalPass", 0.0);
+        quad.draw();
+        flowShader.blur.end();
+        fboBlurV.end();
+    }
 
     //repos Process
     ///////////////////////////////////////////////
-    fboRepos.begin();
-    flowShader.repos.begin();
-    flowShader.repos.setUniform2f("amt", displaceAmount, displaceAmount);
-    flowShader.repos.setUniformTexture("tex0", cur, 0);
-    flowShader.repos.setUniformTexture("tex1", fboBlurV, 1);
-    quad.draw();
-    flowShader.repos.end();
-    fboRepos.end();
+    if(doShaderRepos) {
+        fboRepos.begin();
+        flowShader.repos.begin();
+        flowShader.repos.setUniform2f("amt", displaceAmount, displaceAmount);
+        flowShader.repos.setUniformTexture("tex0", cur, 0);
+        flowShader.repos.setUniformTexture("tex1", fboBlurV, 1);
+        quad.draw();
+        flowShader.repos.end();
+        fboRepos.end();
+    }
 
     lastTex.begin();
     cur.draw(0,0);

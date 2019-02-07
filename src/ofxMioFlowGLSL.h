@@ -6,7 +6,9 @@
 class ofxMioFlowGLSL  {
 public:
     bool enabled = true;
-    bool doReadback = false;
+    bool doShaderBlur = true; // run blurring shader
+    bool doShaderRepos = true; // run repositioning (warping) shader
+    bool doReadback = false; // TODO: which one to readback?
     float lambda = 0.5;
     float blurAmount = 5;
     float displaceAmount = 1000;
