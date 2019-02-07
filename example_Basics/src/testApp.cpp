@@ -26,7 +26,7 @@ void testApp::update(){
         float valX=(float)ofGetMouseX()/(float)ofGetWidth();
         float valY=(float)ofGetMouseY()/(float)ofGetHeight();
 
-        mioFlow.update(cam.getTexture(),valX,valY*10,0.5);
+        mioFlow.update(cam.getTexture(), valX, valY*10, 0.5, true);
     }
 }  
 
@@ -37,6 +37,7 @@ void testApp::draw(){
     mioFlow.drawReposition(0,0);
     mioFlow.drawFlowGrid(0,480);
     mioFlow.drawFlowGridRaw(640,480);
+    mioFlow.drawVectors(0, 0, 1000, 10);
     ofSetColor(255);
     ofDrawBitmapString("oi -> " + ofToString(ofGetFrameRate()),20,20,0);
 }  

@@ -46,14 +46,15 @@ void ofxMioFlowGLSL::setup(int wI,int hI, int internalformat) {
     quad.mapTexCoords(1, 1, w, h);
 }
 
-void ofxMioFlowGLSL::update(ofTexture cur, float lambdaI,float blurAmountI, float displaceAmountI ) {
-    lambda=lambdaI;
-    blurAmount=blurAmountI;
-    displaceAmount=displaceAmountI;
+void ofxMioFlowGLSL::update(const ofTexture& cur, float lambdaI, float blurAmountI, float displaceAmountI, bool readbackI) {
+    lambda = lambdaI;
+    blurAmount = blurAmountI;
+    displaceAmount = displaceAmountI;
+    readback = readbackI;
     update(cur);
 }
 
-void ofxMioFlowGLSL::update(ofTexture cur) {
+void ofxMioFlowGLSL::update(const ofTexture& cur) {
     if(!enabled) return;
 
     //flow Process
@@ -111,6 +112,7 @@ void ofxMioFlowGLSL::update(ofTexture cur) {
     cur.draw(0,0);
     lastTex.end();
 
+    if(readback) fboBlurV.readToPixels(flowPix);
 }
 
 
@@ -119,6 +121,7 @@ void ofxMioFlowGLSL::draw(int x, int y) {
     if(doDrawFlowGrid) drawFlowGrid(x, y);
     if(doDrawFlowGridRaw) drawFlowGridRaw(x, y);
     if(doDrawReposition) drawReposition(x, y);
+    if(doDrawVectors) drawVectors(x, y);
 }
 
 
@@ -134,10 +137,25 @@ void ofxMioFlowGLSL::drawReposition(int x,int y) {
     fboRepos.draw(x,y);
 }
 
-ofTexture ofxMioFlowGLSL::getFlowBlurTexture() {
+void ofxMioFlowGLSL::drawVectors(int x,int y, float scale, int step) {
+    ofPushStyle();
+    ofPushMatrix();
+    for(int j=0; j<h; j+=step) {
+        for(int i=0; i<w; i+=step) {
+            ofFloatColor c = flowPix.getColor(i, j);
+            ofVec2f v = colorToVel(c);
+            v *= scale;
+            ofLine(i, j, i+v.x, j+v.y);
+        }
+    }
+    ofPopMatrix();
+    ofPopStyle();
+}
+
+ofTexture& ofxMioFlowGLSL::getFlowBlurTexture() {
     return fboBlurV.getTexture();
 }
 
-ofTexture ofxMioFlowGLSL::getFlowRawTexture() {
+ofTexture& ofxMioFlowGLSL::getFlowRawTexture() {
     return fboFlow.getTexture();
 }
