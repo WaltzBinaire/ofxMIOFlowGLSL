@@ -18,7 +18,7 @@ public:
     bool doDrawReposition = false;
     bool doDrawVectors = false;
     float drawVectorsScale = 1000;
-    float drawVectorsStep = 10;
+    int drawVectorsStep = 10;
 
     ofFloatPixels flowPix; // contains flow information in pixels (needs doReadback to be true)
 

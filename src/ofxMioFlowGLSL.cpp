@@ -47,6 +47,9 @@ void ofxMioFlowGLSL::setup(int wI,int hI, int internalformat) {
 void ofxMioFlowGLSL::update(const ofTexture& cur) {
     if(!enabled) return;
 
+    ofPushStyle();
+    ofDisableAlphaBlending();
+
     //flow Process
     ///////////////////////////////////////////////
     fboFlow.begin();
@@ -107,6 +110,8 @@ void ofxMioFlowGLSL::update(const ofTexture& cur) {
     lastTex.end();
 
     if(doReadback) fboBlurV.readToPixels(flowPix);
+
+    ofPopStyle();
 }
 
 
