@@ -3,18 +3,13 @@
 
 
 void testApp::setup(){  
-    int w,h;
-    w=640;
-    h=480;
-    cam.initGrabber(w, h, true);
+    cam.initGrabber(640, 480, true);
     cam.setUseTexture(true);
 
+    mioFlow.setup(cam.getWidth(), cam.getHeight());
 
-    ofSetBackgroundAuto(false);
-    ofEnableAlphaBlending();
-
-    mioFlow.setup(w,h);
-} 
+	ofSetBackgroundColor(50);
+}
 
 
 
@@ -37,14 +32,12 @@ void testApp::update(){
 
 //--------------------------------------------------------------  
 void testApp::draw(){  
-    ofBackground(0);
-
     mioFlow.drawReposition(0, 0);
-    mioFlow.drawReposition(640, 0);
-    mioFlow.drawVectors(640, 0);
+    mioFlow.drawReposition(mioFlow.getWidth(), 0);
+    mioFlow.drawVectors(mioFlow.getWidth(), 0);
 
-    mioFlow.drawFlowGridRaw(0, 480);
-    mioFlow.drawFlowGrid(640, 480);
+    mioFlow.drawFlowGridRaw(0, mioFlow.getHeight());
+    mioFlow.drawFlowGrid(mioFlow.getWidth(), mioFlow.getHeight());
     ofSetColor(255);
-    ofDrawBitmapString("oi -> " + ofToString(ofGetFrameRate()),20,20,0);
+    ofDrawBitmapString(ofToString(ofGetFrameRate()),20,20,0);
 }  
