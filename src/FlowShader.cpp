@@ -52,17 +52,30 @@ string FlowShader::getVertShader(){
     return ofIsGLProgrammableRenderer() ? shaderProgram3 : shaderProgram0;
 }
 
+
+string prepShader(string header1, string header3, string body) {
+	string str;
+	if (ofIsGLProgrammableRenderer()) {
+		str = header3 + body;
+		ofStringReplace(str, "gl_FragColor", "outColor");
+	}
+	else {
+		str = header1 + body;
+	}
+	return str;
+}
+
 ///Optical Flow modification from Andrew Benson
 string FlowShader::getFlowShader(){
-    string shaderHeader0 = R"(
+    string shaderHeader1 = R"(
                            varying vec2 varyingtexcoord;
                            )";
     string shaderHeader3 = R"(
                            #version 150
                            in vec2 varyingtexcoord;
-//                           out vec4 gl_FragColor; // automatically declared by openframeworks
+                           out vec4 gl_FragColor;
                            )";
-    string shaderProgram = R"(
+    string shaderBody = R"(
                            uniform sampler2DRect tex0;
                            uniform sampler2DRect tex1;
                            uniform vec2 scale;
@@ -113,21 +126,21 @@ string FlowShader::getFlowShader(){
                                gl_FragColor = getColorCoded(vx.r,vy.r,scale);
                            }
                            )";
-    return (ofIsGLProgrammableRenderer() ? shaderHeader3 : shaderHeader0) + shaderProgram;
+    return prepShader(shaderHeader1, shaderHeader3, shaderBody);
 }
 
 
 ///Reposition
 string FlowShader::getReposShader(){
-    string shaderHeader0 = R"(
+    string shaderHeader1 = R"(
                            varying vec2 varyingtexcoord;
                            )";
     string shaderHeader3 = R"(
                            #version 150
                            in vec2 varyingtexcoord;
-//                           out vec4 gl_FragColor; // automatically declared by openframeworks
+                           out vec4 gl_FragColor;
                            )";
-    string shaderProgram = R"(
+    string shaderBody = R"(
                            uniform vec2 amt;
                            uniform sampler2DRect tex0;
                            uniform sampler2DRect tex1;
@@ -146,20 +159,20 @@ string FlowShader::getReposShader(){
                            }
                            )";
 
-    return (ofIsGLProgrammableRenderer() ? shaderHeader3 : shaderHeader0) + shaderProgram;
+	return prepShader(shaderHeader1, shaderHeader3, shaderBody);
 }
 
 //Vertical and Horizontal Blur
 string FlowShader::getBlurShader(){
-    string shaderHeader0 = R"(
+    string shaderHeader1 = R"(
                            varying vec2 varyingtexcoord;
                            )";
     string shaderHeader3 = R"(
                            #version 150
                            in vec2 varyingtexcoord;
-//                           out vec4 gl_FragColor; // automatically declared by openframeworks
+                           out vec4 gl_FragColor;
                            )";
-    string shaderProgram = R"(
+    string shaderBody = R"(
                            uniform sampler2DRect texture;
                            uniform vec2 texOffset;
                            uniform float blurSize;
@@ -225,5 +238,5 @@ string FlowShader::getBlurShader(){
                            }
                            )";
 
-    return (ofIsGLProgrammableRenderer() ? shaderHeader3 : shaderHeader0) + shaderProgram;
+	return prepShader(shaderHeader1, shaderHeader3, shaderBody);
 }
