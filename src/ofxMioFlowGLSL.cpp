@@ -143,9 +143,9 @@ void ofxMioFlowGLSL::drawReposition(int x,int y) {
 fboRepos.draw(x,y);
 }
 ofTexture ofxMioFlowGLSL::getFlowBlurTexture() {
-	return fboBlurV.getTextureReference();
+	return fboBlurV.getTexture();
 }
 
 ofTexture ofxMioFlowGLSL::getFlowRawTexture() {
-	return fboFlow.getTextureReference();
+	return fboFlow.getTexture();
 }
