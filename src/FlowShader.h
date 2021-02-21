@@ -2,17 +2,14 @@
 
 #include "ofMain.h"
 
-#define STRINGIFY(A) #A
-
 class FlowShader  {
 public:
 	void setup();
 
-	string getVertShader();
+    string getVertShader();
 	string getFlowShader();
 	string getReposShader();
-	string getBlurShader();
+    string getBlurShader();
 
-
-	ofShader repos, flow,blur;  
+    ofShader repos, flow, blur;
 };
